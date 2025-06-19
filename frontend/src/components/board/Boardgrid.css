@@ -1,0 +1,66 @@
+.board-grid-container {
+    margin: 30px auto;
+    max-width: 1200px;
+}
+
+.section-title {
+font-size: 1.8rem;
+color: #333;
+margin-bottom: 20px;
+text-align: left;
+}
+
+.board-grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+gap: 20px;
+}
+
+.no-boards-message {
+background-color: white;
+border-radius: 8px;
+padding: 40px;
+text-align: center;
+box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.no-boards-message p {
+font-size: 1.2rem;
+color: #666;
+margin-bottom: 20px;
+}
+
+.create-board-btn {
+background-color: #61dafb;
+color: #282c34;
+border: none;
+padding: 10px 20px;
+border-radius: 4px;
+font-size: 1rem;
+font-weight: 500;
+cursor: pointer;
+transition: background-color 0.3s;
+}
+
+.create-board-btn:hover {
+background-color: #4fa8d1;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+.board-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 15px;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    text-align: center;
+}
+}
+
+@media (max-width: 480px) {
+.board-grid {
+    grid-template-columns: 1fr;
+}
+}
