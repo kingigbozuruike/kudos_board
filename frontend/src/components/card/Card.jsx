@@ -11,35 +11,9 @@ const Card = ({ card, onUpvote, onDelete }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [imgError, setImgError] = useState(false);
 
-    const [hasUpvoted, setHasUpvoted] = useState(() => {
-        const savedUpvotes = localStorage.getItem('upvotedCards');
-        if (savedUpvotes) {
-            const upvotedCards = JSON.parse(savedUpvotes);
-            return Object.keys(upvotedCards).some(key => key.endsWith(`-${card.id}`));
-        }
-        return false;
-    });
-
     useEffect(() => {
         setImgError(false);
     }, [imageUrl]);
-
-    useEffect(() => {
-        const handleStorageChange = () => {
-            const savedUpvotes = localStorage.getItem('upvotedCards');
-            if (savedUpvotes) {
-                const upvotedCards = JSON.parse(savedUpvotes);
-                setHasUpvoted(Object.keys(upvotedCards).some(key => key.endsWith(`-${card.id}`)));
-            } else {
-                setHasUpvoted(false);
-            }
-        };
-
-        window.addEventListener('storage', handleStorageChange);
-        return () => {
-            window.removeEventListener('storage', handleStorageChange);
-        };
-    }, [card.id]);
 
     const handleImageError = async () => {
         console.error("Failed to load GIF:", imageUrl);
@@ -61,7 +35,6 @@ const Card = ({ card, onUpvote, onDelete }) => {
     const handleUpvote = () => {
         if (onUpvote) {
             onUpvote(card.id);
-            setHasUpvoted(!hasUpvoted);
         }
     };
 
@@ -94,10 +67,10 @@ const Card = ({ card, onUpvote, onDelete }) => {
             <p className="owner">Created by: {owner}</p>
             <div className="card-actions">
                 <button
-                    className={`upvote-button ${hasUpvoted ? 'upvoted' : ''}`}
+                    className="upvote-button"
                     onClick={handleUpvote}
                 >
-                    {hasUpvoted ? `Remove Upvote: ${votes}` : `Upvote: ${votes}`}
+                    Upvote: {votes}
                 </button>
                 <button className="delete-button" onClick={handleDelete}>Delete</button>
             </div>

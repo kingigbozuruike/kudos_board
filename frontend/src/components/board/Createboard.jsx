@@ -5,9 +5,7 @@ const Createboard = ({ onSubmit }) => {
 const [formData, setFormData] = useState({
 title: '',
 category: '',
-author: '',
-description: '',
-image: `https://picsum.photos/seed/${Date.now()}/200/300`
+author: ''
 });
 
 const [errors, setErrors] = useState({});
@@ -46,20 +44,12 @@ const handleSubmit = (e) => {
 e.preventDefault();
 
 if (validateForm()) {
-    const uniqueSeed = `board-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
-    const imageUrl = `https://picsum.photos/seed/${uniqueSeed}/200/300`;
+    onSubmit(formData);
 
-    const submissionData = {
-        ...formData,
-        image: imageUrl
-    };
-    onSubmit(submissionData);
     setFormData({
     title: '',
     category: '',
-    author: '',
-    image: `https://picsum.photos/seed/${Date.now()}/200/300`,
-    description: '',
+    author: ''
     });
 }
 };
@@ -92,7 +82,6 @@ return (
                 className={errors.category ? 'error' : ''}
             >
                 <option value="">Select a category</option>
-                <option value="welcome">Welcome</option>
                 <option value="celebration">Celebration</option>
                 <option value="thank you">Thank You</option>
                 <option value="inspiration">Inspiration</option>
@@ -107,15 +96,6 @@ return (
                 id="author"
                 name="author"
                 value={formData.author}
-                onChange={handleChange}
-            />
-            </div>
-            <div className="form-group --description">
-            <label htmlFor="description">Description</label>
-            <textarea
-                id="description"
-                name="description"
-                value={formData.description}
                 onChange={handleChange}
             />
             </div>

@@ -9,15 +9,16 @@ const router = new Router()
 
 // create a new board
 router.post("/api/board/create", validateCreateBoard, async(req, res) => {
-    const { body: { title, category, author} } = req
+    const { body: { title, category, author, image } } = req
+
+    const imageUrl = image || `https://picsum.photos/seed/${Date.now()}/300/400`;
 
     const board = await prisma.board.create({
         data : {
             title : title,
             category : category,
             author : author ? author : "",
-            image: "https://picsum.photos/300/400",
-            // card: []
+            image: imageUrl,
         }
     })
     res.json(board)

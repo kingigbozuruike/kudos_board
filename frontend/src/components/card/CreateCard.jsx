@@ -13,6 +13,7 @@ const CreateCard = ({ onSubmit }) => {
 
   const [isGifLoading, setIsGifLoading] = useState(false);
   const [previewGif, setPreviewGif] = useState('');
+  const [gifSearchTerm, setGifSearchTerm] = useState('');
 
   const [errors, setErrors] = useState({});
 
@@ -30,9 +31,6 @@ const CreateCard = ({ onSubmit }) => {
       });
     }
 
-    if (name === 'category' && value) {
-      fetchRandomGif(value);
-    }
   };
 
   const fetchRandomGif = async (searchTerm) => {
@@ -51,9 +49,17 @@ const CreateCard = ({ onSubmit }) => {
     }
   };
 
+  // Search for a GIF
+  const handleGifSearch = (e) => {
+    e.preventDefault();
+    if (gifSearchTerm.trim()) {
+      fetchRandomGif(gifSearchTerm.trim());
+    }
+  };
+
   // Get a new random GIF
   const handleRefreshGif = () => {
-    const searchTerm = formData.category || formData.title || 'thank you';
+    const searchTerm = gifSearchTerm || formData.title;
     fetchRandomGif(searchTerm);
   };
 
@@ -87,7 +93,6 @@ const CreateCard = ({ onSubmit }) => {
             id: Date.now().toString()
           });
 
-          // Reset form
           setFormData({
             title: '',
             description: '',
@@ -98,14 +103,12 @@ const CreateCard = ({ onSubmit }) => {
           setPreviewGif('');
         });
       } else {
-        // Submit with the existing GIF
         onSubmit({
           ...formData,
           votes: 0,
           id: Date.now().toString()
         });
 
-        // Reset form
         setFormData({
           title: '',
           description: '',
@@ -161,6 +164,21 @@ const CreateCard = ({ onSubmit }) => {
 
           <div className="form-group">
             <label htmlFor="gif">GIF</label>
+            <div className="gif-search">
+              <input
+                type="text"
+                placeholder="Search for a GIF..."
+                value={gifSearchTerm}
+                onChange={(e) => setGifSearchTerm(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={handleGifSearch}
+                className="search-gif-btn"
+              >
+                Search
+              </button>
+            </div>
             <div className="gif-container">
               {isGifLoading ? (
                 <div className="gif-loading">Loading GIF...</div>
@@ -192,7 +210,6 @@ const CreateCard = ({ onSubmit }) => {
               onChange={handleChange}
             >
               <option value="">Select a category</option>
-              <option value="welcome">Welcome</option>
               <option value="celebration">Celebration</option>
               <option value="thank you">Thank You</option>
               <option value="inspiration">Inspiration</option>

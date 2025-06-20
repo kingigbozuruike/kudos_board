@@ -5,104 +5,89 @@ import Card from "../components/card/Card";
 import Modal from "../components/modal/Modal";
 import CreateCard from "../components/card/Createcard";
 import "./BoardPage.css";
+import { fetchBoardById, createCard, upvoteCard, deleteCard } from "../services/api";
 
 const BoardPage = () => {
     const { boardId } = useParams();
     const [board, setBoard] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isCreateCardModalOpen, setIsCreateCardModalOpen] = useState(false);
-    const [upvotedCards, setUpvotedCards] = useState(() => {
-        // Load upvoted cards from localStorage
-        const savedUpvotes = localStorage.getItem('upvotedCards');
-        return savedUpvotes ? JSON.parse(savedUpvotes) : {};
-    });
 
-    // fetching from local storage
+    // Fetch board data from API
     useEffect(() => {
-        const fetchBoard = () => {
-            const savedBoards = localStorage.getItem('kudosBoards');
-            const boards = savedBoards ? JSON.parse(savedBoards) : [];
+        const fetchBoardData = async () => {
+            try {
+                const boardData = await fetchBoardById(boardId);
 
-            const foundBoard = boards.find(b => b.id === boardId);
-            setBoard(foundBoard);
-            setLoading(false);
+                const mappedCards = (boardData.card || []).map(card => ({
+                    id: card.id,
+                    content: card.title,
+                    description: card.description,
+                    gifUrl: card.gifUrl,
+                    author: "Anonymous",
+                    upvotes: card.upvote
+                }));
+
+                setBoard({
+                    id: boardData.id,
+                    title: boardData.title,
+                    category: boardData.category,
+                    author: boardData.author || "Anonymous",
+                    createdAt: boardData.createdAt,
+                    image: boardData.image,
+                    cards: mappedCards
+                });
+            } catch (error) {
+                console.error("Error fetching board:", error);
+            } finally {
+                setLoading(false);
+            }
         };
 
-        fetchBoard();
+        fetchBoardData();
     }, [boardId]);
 
-    // Save upvoted cards to localStorage when they change
-    useEffect(() => {
-        localStorage.setItem('upvotedCards', JSON.stringify(upvotedCards));
-    }, [upvotedCards]);
+    const handleUpvoteCard = async (cardId) => {
+        if (!board) return;
 
-    // Function to update the board in localStorage
-    const updateBoardInStorage = (updatedBoard) => {
-        const savedBoards = localStorage.getItem('kudosBoards');
-        if (savedBoards) {
-            const boards = JSON.parse(savedBoards);
-            const updatedBoards = boards.map(b =>
-                b.id === updatedBoard.id ? updatedBoard : b
-            );
-            localStorage.setItem('kudosBoards', JSON.stringify(updatedBoards));
+        try {
+            const updatedCardData = await upvoteCard(cardId);
+
+            const updatedCards = board.cards.map(card => {
+                if (card.id === cardId) {
+                    return {
+                        ...card,
+                        upvotes: updatedCardData.upvote
+                    };
+                }
+                return card;
+            });
+
+            setBoard({
+                ...board,
+                cards: updatedCards
+            });
+        } catch (error) {
+            console.error("Error upvoting card:", error);
+            alert("Failed to upvote card. Please try again.");
         }
     };
 
-    // Handle toggling upvote on a card
-    const handleUpvoteCard = (cardId) => {
+    const handleDeleteCard = async (cardId) => {
         if (!board) return;
 
-        // Check if user has already upvoted this card
-        const cardKey = `${boardId}-${cardId}`;
-        const hasUpvoted = upvotedCards[cardKey];
+        try {
+            await deleteCard(cardId);
 
-        // Update upvoted cards state
-        const newUpvotedCards = { ...upvotedCards };
-
-        if (hasUpvoted) {
-            // Remove upvote
-            delete newUpvotedCards[cardKey];
-        } else {
-            // Add upvote
-            newUpvotedCards[cardKey] = true;
+            const updatedCards = board.cards.filter(card => card.id !== cardId);
+            setBoard({
+                ...board,
+                cards: updatedCards
+            });
+        } catch (error) {
+            console.error("Error deleting card:", error);
+            alert("Failed to delete card. Please try again.");
         }
-
-        setUpvotedCards(newUpvotedCards);
-
-        // Update card upvotes count
-        const updatedCards = board.cards.map(card => {
-            if (card.id === cardId) {
-                return {
-                    ...card,
-                    upvotes: hasUpvoted
-                        ? Math.max(0, (card.upvotes || 0) - 1) // Decrease count, but not below 0
-                        : (card.upvotes || 0) + 1 // Increase count
-                };
-            }
-            return card;
-        });
-
-        const updatedBoard = {
-            ...board,
-            cards: updatedCards
-        };
-
-        setBoard(updatedBoard);
-        updateBoardInStorage(updatedBoard);
-    };
-
-    // Handle deleting a card
-    const handleDeleteCard = (cardId) => {
-        if (!board) return;
-
-        const updatedCards = board.cards.filter(card => card.id !== cardId);
-        const updatedBoard = {
-            ...board,
-            cards: updatedCards
-        };
-
-        setBoard(updatedBoard);
-        updateBoardInStorage(updatedBoard);
     };
 
     if (loading) {
@@ -164,26 +149,38 @@ const BoardPage = () => {
             </div>
 
             <Modal isOpen={isCreateCardModalOpen} onClose={() => setIsCreateCardModalOpen(false)}>
-                <CreateCard onSubmit={(cardData) => {
-                    // Ensure consistent card structure
-                    const newCard = {
-                        ...cardData,
-                        id: Date.now().toString(),
-                        createdAt: new Date().toISOString(),
-                        // Add both naming conventions for compatibility
-                        content: cardData.title,
-                        author: cardData.owner,
-                        gifUrl: cardData.gif,
-                        upvotes: cardData.votes || 0
-                    };
+                <CreateCard onSubmit={async (cardData) => {
+                    try {
+                        const apiCardData = {
+                            title: cardData.title,
+                            description: cardData.description || "",
+                            gifUrl: cardData.gif || "",
+                            boardId: parseInt(boardId)
+                        };
 
-                    const updatedBoard = {
-                        ...board,
-                        cards: [...board.cards, newCard]
-                    };
-                    setBoard(updatedBoard);
-                    updateBoardInStorage(updatedBoard);
-                    setIsCreateCardModalOpen(false);
+                        console.log("Creating card with data:", apiCardData);
+
+                        const newCard = await createCard(apiCardData);
+
+                        const mappedCard = {
+                            id: newCard.id,
+                            content: newCard.title,
+                            description: newCard.description,
+                            gifUrl: newCard.gifUrl,
+                            author: cardData.owner || "Anonymous",
+                            upvotes: newCard.upvote
+                        };
+
+                        setBoard({
+                            ...board,
+                            cards: [...board.cards, mappedCard]
+                        });
+
+                        setIsCreateCardModalOpen(false);
+                    } catch (error) {
+                        console.error("Error creating card:", error);
+                        alert("Failed to create card. Please try again.");
+                    }
                 }} />
             </Modal>
         </div>
