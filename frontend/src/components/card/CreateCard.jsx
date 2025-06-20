@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './CreateCard.css';
+import { getRandomGif } from '../../utils/giphyApi';
 
 const CreateCard = ({ onSubmit }) => {
   const [formData, setFormData] = useState({
@@ -9,6 +10,9 @@ const CreateCard = ({ onSubmit }) => {
     gif: '',
     category: ''
   });
+
+  const [isGifLoading, setIsGifLoading] = useState(false);
+  const [previewGif, setPreviewGif] = useState('');
 
   const [errors, setErrors] = useState({});
 
@@ -25,6 +29,32 @@ const CreateCard = ({ onSubmit }) => {
         [name]: ''
       });
     }
+
+    if (name === 'category' && value) {
+      fetchRandomGif(value);
+    }
+  };
+
+  const fetchRandomGif = async (searchTerm) => {
+    setIsGifLoading(true);
+    try {
+      const gifUrl = await getRandomGif(searchTerm);
+      setPreviewGif(gifUrl);
+      setFormData(prev => ({
+        ...prev,
+        gif: gifUrl
+      }));
+    } catch (error) {
+      console.error('Error fetching GIF:', error);
+    } finally {
+      setIsGifLoading(false);
+    }
+  };
+
+  // Get a new random GIF
+  const handleRefreshGif = () => {
+    const searchTerm = formData.category || formData.title || 'thank you';
+    fetchRandomGif(searchTerm);
   };
 
   const validateForm = () => {
@@ -46,18 +76,45 @@ const CreateCard = ({ onSubmit }) => {
     e.preventDefault();
 
     if (validateForm()) {
-      onSubmit({
-        ...formData,
-        votes: 0,
-        id: Date.now().toString()
-      });
-      setFormData({
-        title: '',
-        description: '',
-        owner: '',
-        gif: '',
-        category: ''
-      });
+      // If no GIF has been selected, get one before submitting
+      if (!formData.gif) {
+        const searchTerm = formData.category || formData.title || 'thank you';
+        getRandomGif(searchTerm).then(gifUrl => {
+          onSubmit({
+            ...formData,
+            gif: gifUrl,
+            votes: 0,
+            id: Date.now().toString()
+          });
+
+          // Reset form
+          setFormData({
+            title: '',
+            description: '',
+            owner: '',
+            gif: '',
+            category: ''
+          });
+          setPreviewGif('');
+        });
+      } else {
+        // Submit with the existing GIF
+        onSubmit({
+          ...formData,
+          votes: 0,
+          id: Date.now().toString()
+        });
+
+        // Reset form
+        setFormData({
+          title: '',
+          description: '',
+          owner: '',
+          gif: '',
+          category: ''
+        });
+        setPreviewGif('');
+      }
     }
   };
 
@@ -103,15 +160,27 @@ const CreateCard = ({ onSubmit }) => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="gif">GIF URL</label>
-            <input
-              type="url"
-              id="gif"
-              name="gif"
-              value={formData.gif}
-              onChange={handleChange}
-              placeholder="GIF link (optional)"
-            />
+            <label htmlFor="gif">GIF</label>
+            <div className="gif-container">
+              {isGifLoading ? (
+                <div className="gif-loading">Loading GIF...</div>
+              ) : previewGif ? (
+                <div className="gif-preview">
+                  <img src={previewGif} alt="GIF Preview" />
+                </div>
+              ) : (
+                <div className="no-gif">No GIF selected</div>
+              )}
+              <div className="gif-actions">
+                <button
+                  type="button"
+                  className="refresh-gif-btn"
+                  onClick={handleRefreshGif}
+                >
+                  {previewGif ? "Get Another GIF" : "Get Random GIF"}
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="form-group">

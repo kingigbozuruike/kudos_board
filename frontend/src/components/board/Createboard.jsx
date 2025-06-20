@@ -7,7 +7,7 @@ title: '',
 category: '',
 author: '',
 description: '',
-image: ''
+image: `https://picsum.photos/seed/${Date.now()}/200/300`
 });
 
 const [errors, setErrors] = useState({});
@@ -46,12 +46,19 @@ const handleSubmit = (e) => {
 e.preventDefault();
 
 if (validateForm()) {
-    onSubmit(formData);
+    const uniqueSeed = `board-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+    const imageUrl = `https://picsum.photos/seed/${uniqueSeed}/200/300`;
+
+    const submissionData = {
+        ...formData,
+        image: imageUrl
+    };
+    onSubmit(submissionData);
     setFormData({
     title: '',
     category: '',
     author: '',
-    image: '',
+    image: `https://picsum.photos/seed/${Date.now()}/200/300`,
     description: '',
     });
 }
@@ -103,19 +110,6 @@ return (
                 onChange={handleChange}
             />
             </div>
-
-            <div className="form-group --image">
-            <label htmlFor="image">Image URL</label>
-            <input
-                type="url"
-                id="image"
-                name="image"
-                value={formData.image}
-                onChange={handleChange}
-                placeholder="Image link"
-            />
-            </div>
-
             <div className="form-group --description">
             <label htmlFor="description">Description</label>
             <textarea

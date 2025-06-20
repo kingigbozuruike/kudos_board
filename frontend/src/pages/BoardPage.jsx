@@ -11,91 +11,17 @@ const BoardPage = () => {
     const [board, setBoard] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isCreateCardModalOpen, setIsCreateCardModalOpen] = useState(false);
+    const [upvotedCards, setUpvotedCards] = useState(() => {
+        // Load upvoted cards from localStorage
+        const savedUpvotes = localStorage.getItem('upvotedCards');
+        return savedUpvotes ? JSON.parse(savedUpvotes) : {};
+    });
 
-    // Simulating fetching board data
+    // fetching from local storage
     useEffect(() => {
         const fetchBoard = () => {
-            const boards = [
-                {
-                    id: '1',
-                    title: 'Welcome to Kudos Board',
-                    image: '/img/placeholder1.png',
-                    category: 'welcome',
-                    description: 'A place to share appreciation and celebrate achievements',
-                    author: 'Admin',
-                    createdAt: new Date().toISOString(),
-                    cards: [
-                        {
-                            id: '101',
-                            title: 'Thank you for creating this amazing platform!',
-                            description: 'This platform is going to be a game-changer for our team!',
-                            gif: 'https://via.placeholder.com/150?text=Thank+You',
-                            owner: 'John Doe',
-                            votes: 5,
-                            category: 'thank you'
-                        },
-                        {
-                            id: '102',
-                            title: 'Excited to use this for our team recognition!',
-                            description: 'Looking forward to recognizing all the great work our team does.',
-                            gif: 'https://via.placeholder.com/150?text=Excited',
-                            owner: 'Jane Smith',
-                            votes: 3,
-                            category: 'celebration'
-                        }
-                    ]
-                },
-                {
-                    id: '2',
-                    title: 'Team Celebration',
-                    image: './img/placeholder1.png',
-                    category: 'celebration',
-                    description: 'Celebrate our team accomplishments',
-                    author: 'Team Lead',
-                    createdAt: new Date().toISOString(),
-                    cards: [
-                        {
-                            id: '201',
-                            title: 'Congratulations on shipping the new feature!',
-                            description: 'The new feature is amazing and will help our users tremendously.',
-                            gif: 'https://via.placeholder.com/150?text=Congrats',
-                            owner: 'Manager',
-                            votes: 8,
-                            category: 'celebration'
-                        }
-                    ]
-                },
-                {
-                    id: '3',
-                    title: 'Thank You Notes',
-                    image: './img/placeholder1.png',
-                    category: 'thank you',
-                    description: 'Express gratitude to your colleagues',
-                    author: 'HR Department',
-                    createdAt: new Date().toISOString(),
-                    cards: []
-                },
-                {
-                    id: '4',
-                    title: 'Inspiration Wall',
-                    image: './img/placeholder1.png',
-                    category: 'inspiration',
-                    description: 'Share inspiring quotes and stories',
-                    author: 'Creative Team',
-                    createdAt: new Date().toISOString(),
-                    cards: [
-                        {
-                            id: '401',
-                            title: '"The best way to predict the future is to create it."',
-                            description: 'Abraham Lincoln',
-                            gif: 'https://via.placeholder.com/150?text=Inspiration',
-                            owner: 'Motivational Speaker',
-                            votes: 12,
-                            category: 'inspiration'
-                        }
-                    ]
-                }
-            ];
+            const savedBoards = localStorage.getItem('kudosBoards');
+            const boards = savedBoards ? JSON.parse(savedBoards) : [];
 
             const foundBoard = boards.find(b => b.id === boardId);
             setBoard(foundBoard);
@@ -104,6 +30,80 @@ const BoardPage = () => {
 
         fetchBoard();
     }, [boardId]);
+
+    // Save upvoted cards to localStorage when they change
+    useEffect(() => {
+        localStorage.setItem('upvotedCards', JSON.stringify(upvotedCards));
+    }, [upvotedCards]);
+
+    // Function to update the board in localStorage
+    const updateBoardInStorage = (updatedBoard) => {
+        const savedBoards = localStorage.getItem('kudosBoards');
+        if (savedBoards) {
+            const boards = JSON.parse(savedBoards);
+            const updatedBoards = boards.map(b =>
+                b.id === updatedBoard.id ? updatedBoard : b
+            );
+            localStorage.setItem('kudosBoards', JSON.stringify(updatedBoards));
+        }
+    };
+
+    // Handle toggling upvote on a card
+    const handleUpvoteCard = (cardId) => {
+        if (!board) return;
+
+        // Check if user has already upvoted this card
+        const cardKey = `${boardId}-${cardId}`;
+        const hasUpvoted = upvotedCards[cardKey];
+
+        // Update upvoted cards state
+        const newUpvotedCards = { ...upvotedCards };
+
+        if (hasUpvoted) {
+            // Remove upvote
+            delete newUpvotedCards[cardKey];
+        } else {
+            // Add upvote
+            newUpvotedCards[cardKey] = true;
+        }
+
+        setUpvotedCards(newUpvotedCards);
+
+        // Update card upvotes count
+        const updatedCards = board.cards.map(card => {
+            if (card.id === cardId) {
+                return {
+                    ...card,
+                    upvotes: hasUpvoted
+                        ? Math.max(0, (card.upvotes || 0) - 1) // Decrease count, but not below 0
+                        : (card.upvotes || 0) + 1 // Increase count
+                };
+            }
+            return card;
+        });
+
+        const updatedBoard = {
+            ...board,
+            cards: updatedCards
+        };
+
+        setBoard(updatedBoard);
+        updateBoardInStorage(updatedBoard);
+    };
+
+    // Handle deleting a card
+    const handleDeleteCard = (cardId) => {
+        if (!board) return;
+
+        const updatedCards = board.cards.filter(card => card.id !== cardId);
+        const updatedBoard = {
+            ...board,
+            cards: updatedCards
+        };
+
+        setBoard(updatedBoard);
+        updateBoardInStorage(updatedBoard);
+    };
 
     if (loading) {
         return <div className="loading">Loading...</div>;
@@ -146,7 +146,12 @@ const BoardPage = () => {
                 {board.cards.length > 0 ? (
                     <div className="cards-grid">
                         {board.cards.map(card => (
-                            <Card key={card.id} card={card} />
+                            <Card
+                                key={card.id}
+                                card={card}
+                                onUpvote={handleUpvoteCard}
+                                onDelete={handleDeleteCard}
+                            />
                         ))}
                     </div>
                 ) : (
@@ -160,15 +165,24 @@ const BoardPage = () => {
 
             <Modal isOpen={isCreateCardModalOpen} onClose={() => setIsCreateCardModalOpen(false)}>
                 <CreateCard onSubmit={(cardData) => {
+                    // Ensure consistent card structure
                     const newCard = {
                         ...cardData,
                         id: Date.now().toString(),
-                        createdAt: new Date().toISOString()
+                        createdAt: new Date().toISOString(),
+                        // Add both naming conventions for compatibility
+                        content: cardData.title,
+                        author: cardData.owner,
+                        gifUrl: cardData.gif,
+                        upvotes: cardData.votes || 0
                     };
-                    setBoard({
+
+                    const updatedBoard = {
                         ...board,
                         cards: [...board.cards, newCard]
-                    });
+                    };
+                    setBoard(updatedBoard);
+                    updateBoardInStorage(updatedBoard);
                     setIsCreateCardModalOpen(false);
                 }} />
             </Modal>
