@@ -2,18 +2,19 @@ import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import Header from "../components/header/Header";
 import Card from "../components/card/Card";
+import Modal from "../components/modal/Modal";
+import CreateCard from "../components/card/Createcard";
 import "./BoardPage.css";
 
 const BoardPage = () => {
     const { boardId } = useParams();
     const [board, setBoard] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isCreateCardModalOpen, setIsCreateCardModalOpen] = useState(false);
 
     // Simulating fetching board data
     useEffect(() => {
-        // In a real app, this would be an API call
         const fetchBoard = () => {
-            // Mock data - in a real app, you would fetch this from an API
             const boards = [
                 {
                     id: '1',
@@ -138,7 +139,7 @@ const BoardPage = () => {
             </div>
 
             <div className="board-actions">
-                <button className="add-card-button">Add New Card</button>
+                <button className="add-card-button" onClick={() => setIsCreateCardModalOpen(true)}>Add New Card</button>
             </div>
 
             <div className="cards-container">
@@ -152,10 +153,25 @@ const BoardPage = () => {
                     <div className="empty-cards">
                         <h3>No cards yet</h3>
                         <p>Be the first to add a card to this board!</p>
-                        <button className="add-card-button">Add New Card</button>
+                        <button className="add-card-button" onClick={() => setIsCreateCardModalOpen(true)}>Add New Card</button>
                     </div>
                 )}
             </div>
+
+            <Modal isOpen={isCreateCardModalOpen} onClose={() => setIsCreateCardModalOpen(false)}>
+                <CreateCard onSubmit={(cardData) => {
+                    const newCard = {
+                        ...cardData,
+                        id: Date.now().toString(),
+                        createdAt: new Date().toISOString()
+                    };
+                    setBoard({
+                        ...board,
+                        cards: [...board.cards, newCard]
+                    });
+                    setIsCreateCardModalOpen(false);
+                }} />
+            </Modal>
         </div>
     );
 };

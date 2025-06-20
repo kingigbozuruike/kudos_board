@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 import Header from "../components/header/Header";
-import { useState } from "react";
 import "./HomePage.css";
 import BoardGrid from "../components/board/Boardgrid";
+import Createboard from "../components/board/Createboard";
+import Modal from "../components/modal/Modal";
 
 const HomePage = () => {
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [boards, setBoards] = useState([
         {
             id: '1',
@@ -83,6 +85,8 @@ const HomePage = () => {
         }
     ]);
 
+
+
     const [activeFilter, setActiveFilter] = useState('all');
 
     const categories = [
@@ -126,7 +130,7 @@ const HomePage = () => {
                     </button>
                     ))}
                 </div>
-                <button className="create-button">Create a New Board</button>
+                <button className="create-button" onClick={() => setIsCreateModalOpen(true)}>Create a New Board</button>
             </div>
 
             {filteredBoards.length > 0 ? (
@@ -135,12 +139,23 @@ const HomePage = () => {
                 <div className="empty-state">
                     <h2>No boards found</h2>
                     <p>Create your first kudos board to get started!</p>
-                    <button className="create-button">Create New Board</button>
+                    <button className="create-button" onClick={() => setIsCreateModalOpen(true)}>Create New Board</button>
                 </div>
             )}
+            <Modal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)}>
+                <Createboard onSubmit={(boardData) => {
+                    const newBoard = {
+                        ...boardData,
+                        id: Date.now().toString(),
+                        createdAt: new Date().toISOString(),
+                        cards: []
+                    };
+                    setBoards([...boards, newBoard]);
+                    setIsCreateModalOpen(false);
+                }} />
+            </Modal>
         </div>
     );
 };
-
 
 export default HomePage;
