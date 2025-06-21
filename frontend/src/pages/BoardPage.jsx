@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import Header from "../components/header/Header";
 import Card from "../components/card/Card";
 import Modal from "../components/modal/Modal";
-import CreateCard from "../components/card/Createcard";
+import CreateCard from "../components/card/CreateCard";
 import "./BoardPage.css";
 import { fetchBoardById, createCard, upvoteCard, deleteCard } from "../services/api";
 
