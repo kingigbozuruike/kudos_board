@@ -134,7 +134,8 @@ Deployed Application (**required**): [Kudos Board Deployed Site](https://kudos-b
 
 
 ### Walkthrough Video
-[Walkthrough Video](https://www.loom.com/share/f48d0d539d9c4cd08ee563c5024586fd?sid=4ecf456d-db57-47d0-a7c0-960f60641a7c)
+[https://www.loom.com/share/f48d0d539d9c4cd08ee563c5024586fd?sid=4ecf456d-db57-47d0-a7c0-960f60641a7c](https://www.loom.com/share/f48d0d539d9c4cd08ee563c5024586fd?sid=4ecf456d-db57-47d0-a7c0-960f60641a7c)
+
 ### Reflection
 
 * Did the topics discussed in your labs prepare you to complete the assignment? Be specific, which features in your weekly assignment did you feel unprepared to complete?
