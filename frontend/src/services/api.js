@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'https://kudos-board-ixwv.onrender.com';
 
 export const fetchAllBoards = async () => {
   try {
